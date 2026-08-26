@@ -395,85 +395,85 @@ def create_widgets():
         SUCCESS_COLOR = "green"
         FAIL_COLOR = "red"
 
-        if not qr_code_value:
-            messagebox.showerror("QR Code", "Please Scan QR code then Proceed")
-            return
+        # if not qr_code_value:
+        #     messagebox.showerror("QR Code", "Please Scan QR code then Proceed")
+        #     return
 
-        # Uncomment this section if you want API validation before starting
-        try:
-            url = f"{BASE_URL}/{qr_code_value}"
-            response = requests.get(url, timeout=5)
-            data = response.json()
-            if not data.get("status"):
-                api_message = data.get("message", "Unknown error")
+        # # Uncomment this section if you want API validation before starting
+        # try:
+        #     url = f"{BASE_URL}/{qr_code_value}"
+        #     response = requests.get(url, timeout=5)
+        #     data = response.json()
+        #     if not data.get("status"):
+        #         api_message = data.get("message", "Unknown error")
 
-                success, serial_number = combine_and_save_QR(
-                    operator_name=operator_name,
-                    qa_name=qa_name,
-                    qr_code_value=qr_code_value,
-                    api_response_data=data,
-                    result_status="FAIL",
-                    failure_reason=api_message
-                )
-                if success:
-                    result_var.set("FAIL")
-                    reason_var.set(api_message)
-                    result_display_label.configure(foreground="red")
-                    qr_code.config(bg=FAIL_COLOR, fg="white")
-                    root.after(5000, lambda: [
-                        qr_code.config(bg="white", fg="black"),
-                        qr_code.delete(0, tk.END)
-                    ])
-                    messagebox.showerror("Status", f"{api_message}")
+        #         success, serial_number = combine_and_save_QR(
+        #             operator_name=operator_name,
+        #             qa_name=qa_name,
+        #             qr_code_value=qr_code_value,
+        #             api_response_data=data,
+        #             result_status="FAIL",
+        #             failure_reason=api_message
+        #         )
+        #         if success:
+        #             result_var.set("FAIL")
+        #             reason_var.set(api_message)
+        #             result_display_label.configure(foreground="red")
+        #             qr_code.config(bg=FAIL_COLOR, fg="white")
+        #             root.after(5000, lambda: [
+        #                 qr_code.config(bg="white", fg="black"),
+        #                 qr_code.delete(0, tk.END)
+        #             ])
+        #             messagebox.showerror("Status", f"{api_message}")
 
-                    # Update fail count and total count
-                    try:
-                        current_fail = int(fail_count_var.get().split(": ")[1])
-                    except Exception:
-                        current_fail = 0
-                    fail_count_var.set(f"Fail Count: {current_fail + 1}")
-                    update_total_count()
-                    start_button.config(text="START")
-                    reset_colors()
-                    stopwatch_var.set("00:00:00")
-                    output_queue.put("\n--- STOPPED BY USER ---\n")
-                    root.after(1000, lambda: check_thread_and_clear(extraction_thread))
-                    # root.after(0, lambda: reset_ui_for_next_test())
+        #             # Update fail count and total count
+        #             try:
+        #                 current_fail = int(fail_count_var.get().split(": ")[1])
+        #             except Exception:
+        #                 current_fail = 0
+        #             fail_count_var.set(f"Fail Count: {current_fail + 1}")
+        #             update_total_count()
+        #             start_button.config(text="START")
+        #             reset_colors()
+        #             stopwatch_var.set("00:00:00")
+        #             output_queue.put("\n--- STOPPED BY USER ---\n")
+        #             root.after(1000, lambda: check_thread_and_clear(extraction_thread))
+        #             # root.after(0, lambda: reset_ui_for_next_test())
 
-                else:
-                    print("Failed to save screwing station result to Excel")
-                return
-            qr_code.config(bg=SUCCESS_COLOR, fg="white")
-            # root.after(0, lambda: reset_ui_for_next_test())
-        except Exception as e:
-            error_message = f"Failed to connect to screwing station: {e}"
-            messagebox.showerror("Connection Error", error_message)
+        #         else:
+        #             print("Failed to save screwing station result to Excel")
+        #         return
+        #     qr_code.config(bg=SUCCESS_COLOR, fg="white")
+        #     # root.after(0, lambda: reset_ui_for_next_test())
+        # except Exception as e:
+        #     error_message = f"Failed to connect to screwing station: {e}"
+        #     messagebox.showerror("Connection Error", error_message)
 
-            success, serial_number = combine_and_save_QR(
-                operator_name=operator_name,
-                qa_name=qa_name,
-                qr_code_value=qr_code_value,
-                api_response_data={"error": str(e)},
-                result_status="ERROR",
-                failure_reason=error_message
-            )
-            if success:
-                result_var.set("ERROR")
-                reason_var.set(error_message)
-                result_display_label.configure(foreground="red")
-                current_fail_count = int(fail_count_var.get().split(": ")[1])
-                fail_count_var.set(f"Fail Count: {current_fail_count + 1}")
-                update_total_count()
-                start_button.config(text="START")
-                reset_colors()
-                stopwatch_var.set("00:00:00")
-                output_queue.put("\n--- STOPPED BY USER ---\n")
-                root.after(1000, lambda: check_thread_and_clear(extraction_thread))
-            return
+        #     success, serial_number = combine_and_save_QR(
+        #         operator_name=operator_name,
+        #         qa_name=qa_name,
+        #         qr_code_value=qr_code_value,
+        #         api_response_data={"error": str(e)},
+        #         result_status="ERROR",
+        #         failure_reason=error_message
+        #     )
+        #     if success:
+        #         result_var.set("ERROR")
+        #         reason_var.set(error_message)
+        #         result_display_label.configure(foreground="red")
+        #         current_fail_count = int(fail_count_var.get().split(": ")[1])
+        #         fail_count_var.set(f"Fail Count: {current_fail_count + 1}")
+        #         update_total_count()
+        #         start_button.config(text="START")
+        #         reset_colors()
+        #         stopwatch_var.set("00:00:00")
+        #         output_queue.put("\n--- STOPPED BY USER ---\n")
+        #         root.after(1000, lambda: check_thread_and_clear(extraction_thread))
+        #     return
 
-        if not selected_device or not operator_name or not qa_name or not qr_code_value:
-            messagebox.showerror("Error", "Please fill all fields")
-            return
+        # if not selected_device or not operator_name or not qa_name or not qr_code_value:
+        #     messagebox.showerror("Error", "Please fill all fields")
+        #     return
 
         if baudrate != '115200':
             messagebox.showerror("Error", "Please select the correct baudrate (115200)")

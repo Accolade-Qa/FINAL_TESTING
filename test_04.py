@@ -148,74 +148,279 @@ def extract_data_from_program1(ser):
         return pd.DataFrame({'Date': ['error'], 'Current Time': ['error']})
 
 
+
+######## Old Logic #######
+# def extract_emmc_manufacturer_from_serial(ser, stop_event):
+#     manufacturer_name = None
+#     manufacturer_id = None
+#     product_name = None
+#     data_refresh_hex = None
+
+#     max_retries = 2
+#     retry_count = 0
+
+#     while retry_count <= max_retries:
+#         if retry_count > 0:
+#             print(f"Retry attempt {retry_count}/{max_retries} for eMMC manufacturer extraction...")
+#             time.sleep(2)  # Wait 2 seconds before retry
+
+#         # Send reset command before each attempt
+#         ser.write(b'*SET#CRST#1#')
+#         time.sleep(0.5)  # Give time for reset to take effect
+
+#         print(f"Starting eMMC manufacturer monitoring (timeout: minutes)... Attempt {retry_count + 1}")
+#         timeout = time.time() + 60  # 2 minutes timeout
+
+#         while time.time() < timeout:
+#             if stop_event.is_set():
+#                 ser.close()
+#                 return "STOPPED", None, None, None, None
+
+#             try:
+#                 line = ser.readline().decode('utf-8', errors='replace').strip()
+#                 if not line:
+#                     continue
+#                 save_to_log(log_file_path, line)
+
+#                 # Pattern for Manufacturer Name
+#                 # Looks for: Manufacturer Name              [Samsung]
+#                 name_pattern = r'Manufacturer Name\s+\[([^\]]+)\]'
+#                 name_match = re.search(name_pattern, line)
+#                 if name_match:
+#                     manufacturer_name = name_match.group(1).strip()
+#                     print(f"  - Manufacturer Name: {manufacturer_name}")
+
+#                 # Pattern for Manufacturer ID
+#                 # Looks for: Manufacturer ID                [00000015]   [        21]
+#                 id_pattern = r'Manufacturer ID\s+\[([0-9A-Fa-f]+)\]'
+#                 id_match = re.search(id_pattern, line)
+#                 if id_match:
+#                     manufacturer_id = id_match.group(1)
+#                     print(f"  - Manufacturer ID: {manufacturer_id}")
+
+#                 # Pattern for Product Name
+#                 # Looks for: Product Name                    [8GUF4]
+#                 product_name_pattern = r'Product Name\s+\[([A-Za-z0-9]+)\]'
+
+#                 product_match = re.search(product_name_pattern, line)
+#                 if product_match:
+#                     product_name = product_match.group(1).strip()
+#                     print(f"  - Product Name: {product_name}")
+
+
+#                 # Pattern for Data Refresh Setting
+#                 # Looks for: Data Refresh Setting           [00000002]   [         2]
+#                 data_refresh_pattern = (
+#                     r'Data Refresh Setting\s+'
+#                     r'\[([0-9A-Fa-f]+)\]'
+#                 )
+
+#                 data_refresh_match = re.search(data_refresh_pattern, line)
+#                 if data_refresh_match:
+#                     data_refresh_hex = data_refresh_match.group(1).strip()
+#                     # data_refresh_value = data_refresh_match.group(2)
+
+#                     print(f"  - Data Refresh Setting: {data_refresh_hex}")
+#                     # print(f"  - Data Refresh Value: {data_refresh_value}")
+
+
+#                 # If we found both, return them
+#                 # If we found all required values, return them
+#                 if (
+#                     manufacturer_name
+#                     and manufacturer_id
+#                     and product_name
+#                     and data_refresh_hex
+#                 ):
+#                     print(
+#                         f"Successfully extracted eMMC information "
+#                         f"on attempt {retry_count + 1}"
+#                     )
+
+#                     df11 = pd.DataFrame({
+#                         'Manufacturer Name': [manufacturer_name],
+#                         'Manufacturer ID': [manufacturer_id],
+#                         'Product Name': [product_name],
+#                         'Data Refresh Setting': [data_refresh_hex]
+#                     })
+
+#                     return (
+#                         df11,
+#                         manufacturer_name,
+#                         manufacturer_id,
+#                         product_name,
+#                         data_refresh_hex
+#                     )
+
+#             except Exception as e:
+#                 print(f"Error reading eMMC line: {e}")
+#                 continue
+
+#         # If we reach here, timeout occurred without finding both values
+#         if manufacturer_name or manufacturer_id or product_name or data_refresh_hex:
+#             print(f"Partial data found - Manufacturer Name: {manufacturer_name}, ID: {manufacturer_id}, Product Name: {product_name}, Data Refresh Setting: {data_refresh_hex}")
+
+#         retry_count += 1
+
+#         # If this was the last retry and we didn't find data, break
+#         if retry_count > max_retries:
+#             break
+
+#     print(f"eMMC manufacturer extraction failed after {max_retries + 1} attempts.")
+#     return None, None, None, None, None
+
 def extract_emmc_manufacturer_from_serial(ser, stop_event):
     manufacturer_name = None
     manufacturer_id = None
+    product_name = None
+    data_refresh_hex = None
+    detected_emmc = None
 
     max_retries = 2
     retry_count = 0
 
+    EXPECTED_EMMCS = {
+        "00000015": {
+            "manufacturer": "Samsung",
+            "product": "8GUF4",
+            "data_refresh": "00000002"
+        },
+        "00000090": {
+            "manufacturer": "SK Hynix",
+            "product": "H8G4a"
+        }
+    }
+
     while retry_count <= max_retries:
+
+        manufacturer_name = None
+        manufacturer_id = None
+        product_name = None
+        data_refresh_hex = None
+        detected_emmc = None
+
         if retry_count > 0:
             print(f"Retry attempt {retry_count}/{max_retries} for eMMC manufacturer extraction...")
-            time.sleep(2)  # Wait 2 seconds before retry
+            time.sleep(2)
 
-        # Send reset command before each attempt
         ser.write(b'*SET#CRST#1#')
-        time.sleep(0.5)  # Give time for reset to take effect
+        time.sleep(0.5)
 
-        print(f"Starting eMMC manufacturer monitoring (timeout: minutes)... Attempt {retry_count + 1}")
-        timeout = time.time() + 60  # 2 minutes timeout
+        print(f"Starting eMMC manufacturer monitoring (timeout: 1 minute)... Attempt {retry_count + 1}")
+
+        timeout = time.time() + 60
 
         while time.time() < timeout:
+
             if stop_event.is_set():
                 ser.close()
-                return "STOPPED", None, None
+                return "STOPPED", None, None, None, None, None
 
             try:
                 line = ser.readline().decode('utf-8', errors='replace').strip()
+
                 if not line:
                     continue
+
                 save_to_log(log_file_path, line)
 
-                # Pattern for Manufacturer Name
-                # Looks for: Manufacturer Name              [Samsung]
+                # Manufacturer Name
                 name_pattern = r'Manufacturer Name\s+\[([^\]]+)\]'
                 name_match = re.search(name_pattern, line)
+
                 if name_match:
                     manufacturer_name = name_match.group(1).strip()
                     print(f"  - Manufacturer Name: {manufacturer_name}")
 
-                # Pattern for Manufacturer ID
-                # Looks for: Manufacturer ID                [00000015]   [        21]
+                # Manufacturer ID
                 id_pattern = r'Manufacturer ID\s+\[([0-9A-Fa-f]+)\]'
                 id_match = re.search(id_pattern, line)
+
                 if id_match:
-                    manufacturer_id = id_match.group(1)
+                    manufacturer_id = id_match.group(1).strip().upper()
                     print(f"  - Manufacturer ID: {manufacturer_id}")
 
-                # If we found both, return them
-                if manufacturer_name and manufacturer_id:
-                    print(f"Successfully extracted eMMC manufacturer info on attempt {retry_count + 1}")
-                    df11 = pd.DataFrame({'Manufacturer Name': [manufacturer_name], 'Manufacturer id': [manufacturer_id]})
-                    return df11, manufacturer_name, manufacturer_id
+                # Product Name
+                product_name_pattern = r'Product Name\s+\[([A-Za-z0-9]+)\]'
+                product_match = re.search(product_name_pattern, line)
+
+                if product_match:
+                    product_name = product_match.group(1).strip()
+                    print(f"  - Product Name: {product_name}")
+
+                # Data Refresh Setting
+                data_refresh_pattern = r'Data Refresh Setting\s+\[([0-9A-Fa-f]+)\]'
+                data_refresh_match = re.search(data_refresh_pattern, line)
+
+                if data_refresh_match:
+                    data_refresh_hex = data_refresh_match.group(1).strip().upper()
+                    print(f"  - Data Refresh Setting: {data_refresh_hex}")
+
+                # Check Manufacturer ID
+                if manufacturer_id in EXPECTED_EMMCS:
+
+                    expected = EXPECTED_EMMCS[manufacturer_id]
+
+                    # Common validation
+                    basic_info_valid = (
+                        manufacturer_name
+                        and product_name
+                        and manufacturer_name.lower() == expected["manufacturer"].lower()
+                        and product_name.lower() == expected["product"].lower()
+                    )
+
+                    if basic_info_valid:
+
+                        # Samsung requires Data Refresh Setting validation
+                        if manufacturer_id == "00000015":
+
+                            if data_refresh_hex == expected["data_refresh"]:
+                                detected_emmc = "Samsung"
+
+                        # SK Hynix does NOT require Data Refresh Setting
+                        elif manufacturer_id == "00000090":
+                            detected_emmc = "SK Hynix"
+
+                        # If valid eMMC detected
+                        if detected_emmc:
+
+                            print(f"Detected eMMC: {detected_emmc}")
+
+                            df11 = pd.DataFrame({
+                                'Manufacturer Name': [manufacturer_name],
+                                'Manufacturer ID': [manufacturer_id],
+                                'Product Name': [product_name],
+                                'Data Refresh Setting': [data_refresh_hex],
+                                'Detected eMMC': [detected_emmc]
+                            })
+
+                            return (
+                                df11,
+                                manufacturer_name,
+                                manufacturer_id,
+                                product_name,
+                                data_refresh_hex,
+                                detected_emmc
+                            )
 
             except Exception as e:
                 print(f"Error reading eMMC line: {e}")
                 continue
 
-        # If we reach here, timeout occurred without finding both values
-        if manufacturer_name or manufacturer_id:
-            print(f"Partial data found - Name: {manufacturer_name}, ID: {manufacturer_id}")
+        if manufacturer_name or manufacturer_id or product_name or data_refresh_hex:
+            print(
+                f"Partial data found - "
+                f"Manufacturer Name: {manufacturer_name}, "
+                f"ID: {manufacturer_id}, "
+                f"Product Name: {product_name}, "
+                f"Data Refresh Setting: {data_refresh_hex}"
+            )
 
         retry_count += 1
 
-        # If this was the last retry and we didn't find data, break
-        if retry_count > max_retries:
-            break
-
     print(f"eMMC manufacturer extraction failed after {max_retries + 1} attempts.")
-    return None, None, None
+
+    return None, None, None, None, None, None
 
 def extract_data_from_program2(ser):
     time.sleep(0.5)
@@ -1262,7 +1467,7 @@ def combine_and_save_dataframes(selected_device, stop_event, operator_name, qa_n
             write_initial_commands(ser, stop_event)
             df1 = extract_data_from_program1(ser)  # Date and time
             df3 = extract_data_from_program3(ser)
-            df11, manufacturer_name, manufacturer_id = extract_emmc_manufacturer_from_serial(ser, stop_event)
+            df11, _, _,_,_,_ = extract_emmc_manufacturer_from_serial(ser, stop_event)
             df4 = extract_data_from_program4(ser, stop_event)  # Certificates
             operator = extract_data_from_program7(ser, stop_event)
             if operator == "BSNL":
@@ -1532,7 +1737,7 @@ def combine_and_save_dataframes1(selected_device, stop_event, operator_name, qa_
 
             df1 = extract_data_from_program1(ser)  # Date and time
             df3 = extract_data_from_program3(ser)  # Keywords
-            df11, manufacturer_name, manufacturer_id = extract_emmc_manufacturer_from_serial(ser, stop_event)
+            df11, _, _,_,_,_ = extract_emmc_manufacturer_from_serial(ser, stop_event)
             df4 = extract_data_from_program4(ser, stop_event)  # Certificates
             operator = extract_data_from_program7_1(ser, stop_event)  # OP
             if operator == "AIRTEL":
