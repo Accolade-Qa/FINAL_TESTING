@@ -27,6 +27,7 @@ import time
 from datetime import datetime
 import tkinter
 import os
+import sys
 import openpyxl
 
 stop_button_status = None
@@ -34,7 +35,15 @@ global flag
 
 import json
 
-with open('config.json', 'r') as f:
+
+def resource_path(relative_path):
+    """Return a path valid for both source runs and PyInstaller bundles."""
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
+config_path = resource_path('config.json')
+with open(config_path, 'r', encoding='utf-8') as f:
     config = json.load(f)
 
 HW_VERSION_WIFI = config['hardware_versions']['wifi']

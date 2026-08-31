@@ -34,6 +34,7 @@ import pandas as pd
 import os
 import time
 import openpyxl
+from dotenv import load_dotenv
 
 from test_04 import combine_and_save_dataframes, combine_and_save_dataframes1, combine_and_save_QR, combine_and_save_QR1
 
@@ -53,7 +54,7 @@ baudrate_var = None
 baudrate_dropdown = None
 airtel_authenticated = False  # Track Airtel authentication status
 extraction_thread = None  # Store the extraction thread
-
+load_dotenv()
 
 def resource_path(relative_path):
     """ Get the absolute path to the resource in the executable or when running the script. """
@@ -509,7 +510,7 @@ def create_widgets():
                     messagebox.showwarning("Cancelled", "Airtel activation cancelled.")
                     return
 
-                AIRTEL_PASSWORD = config.get("AIRTEL_PASSWORD", "")
+                AIRTEL_PASSWORD = config.get("AIRTEL_PASSWORD")
                 if entered_password != AIRTEL_PASSWORD:
                     messagebox.showerror("Access Denied", "Incorrect password!")
                     return
