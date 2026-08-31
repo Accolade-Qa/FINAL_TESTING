@@ -26,6 +26,7 @@ import threading
 import queue
 import requests
 import serial
+from PIL import Image, ImageTk
 import serial.tools.list_ports
 import subprocess
 from threading import Event
@@ -62,7 +63,7 @@ def resource_path(relative_path):
 
 
 # Use resource_path to load the image
-image_file_path = resource_path("accolade-logo.gif")
+image_file_path = resource_path("accolade-logo.png")
 
 
 class RedirectText:
@@ -1024,7 +1025,7 @@ def create_widgets():
         font=('Arial', 10),
         command=on_operator_mode_change
     )
-    bsnl_radio.place(x=100, y=260)
+    bsnl_radio.place(x=100, y=220)
 
     airtel_radio = tk.Radiobutton(
         root,
@@ -1034,7 +1035,7 @@ def create_widgets():
         font=('Arial', 10),
         command=on_operator_mode_change
     )
-    airtel_radio.place(x=240, y=260)
+    airtel_radio.place(x=240, y=220)
 
     # Connect Button
     connect_button = tk.Button(root, text="CONNECT", command=connect_button_clicked)
@@ -1042,7 +1043,7 @@ def create_widgets():
 
     # Start/Stop Button
     start_button = ttk.Button(root, text="START", command=start_button_clicked, style='Start.TButton')
-    start_button.place(x=15, y=7 * 38 + 350, anchor='nw')
+    start_button.place(x=15, y=7 * 38 + 300, anchor='nw')
     start_button.configure(width=18)
     start_button.configure(padding=(5, 10))
     start_button.focus_set()
@@ -1055,7 +1056,7 @@ def create_widgets():
 
     # Output Text Area
     serial_data_container = ttk.Frame(root, padding="10")
-    serial_data_container.place(x=880, y=top_space + 3.2 * 38 + 40, anchor='nw')
+    serial_data_container.place(x=860, y=top_space + 3.2 * 38 + 20, anchor='nw')
 
     output_text = scrolledtext.ScrolledText(serial_data_container, wrap=tk.WORD, width=48, height=20)
     output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -1127,15 +1128,22 @@ def create_widgets():
 
     # Logo Container
     logo_container = ttk.LabelFrame(root, text="ACCOLADE ELECTRONICS PRIVATE LIMITED")
-    logo_container.place(x=2.6 * 9 * 37 + 4 * left_space, y=top_space, anchor='nw')
+    logo_container.place(x=2.6 * 9 * 36 + 4 * left_space, y=top_space, anchor='nw',
+                         width=260,height=130)
 
     logo_label = tk.Label(logo_container, bd=0)
     logo_label.grid(row=0, column=0, sticky='e', pady=5)
+    # logo_label.place(x=50, y=50)
 
     try:
-        image = tk.PhotoImage(file=image_file_path)
+        image = Image.open(image_file_path)
+        # image = tk.PhotoImage(file=image_file_path)
+        image = image.resize((220, 100))
+        image = ImageTk.PhotoImage(image) 
+
         logo_label.config(image=image)
         logo_label.image = image
+        logo_label.place(x=20, y=5)
     except tk.TclError as e:
         print(f"Error loading image: {e}. Path used: {image_file_path}")
 
@@ -1146,7 +1154,7 @@ def create_widgets():
 
     # Progress Frame
     progress_frame = ttk.LabelFrame(root, text="Progress", padding="10")
-    progress_frame.place(x=880, y=top_space + 13 * 38 + 40, anchor='nw', width=400, height=80)
+    progress_frame.place(x=860, y=top_space + 13 * 38 + 30, anchor='nw', width=400, height=80)
 
     progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=200, mode="determinate",
                                    variable=progress_var)
