@@ -34,7 +34,7 @@ global flag
 
 import json
 
-with open('config_ATCU.json', 'r') as f:
+with open('config.json', 'r') as f:
     config = json.load(f)
 
 HW_VERSION_WIFI = config['hardware_versions']['wifi']

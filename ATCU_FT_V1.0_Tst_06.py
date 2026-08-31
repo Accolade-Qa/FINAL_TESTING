@@ -342,16 +342,26 @@ def create_widgets():
         print("UI data cleared - ready for next test")
 
     def load_config(file_path="API&Pwd.txt"):
-        config = {}
-        try:
-            with open(file_path, "r") as file:
-                for line in file:
-                    if "=" in line:
-                        key, value = line.strip().split("=", 1)
-                        config[key] = value
-        except FileNotFoundError:
-            print(f"Config file {file_path} not found. Using defaults.")
-            config = {"BASE_URL": "http://default.url", "AIRTEL_PASSWORD": "default"}
+        # file_path="API&Pwd.txt"
+        config = {
+            "BASE_URL": os.getenv("BASE_URL", "http://default.url"),
+            "Aepl_URL": os.getenv("Aepl_URL", ""),
+            "AIRTEL_PASSWORD": os.getenv("AIRTEL_PASSWORD", "default"),
+        }
+
+        # # Keep the legacy file-based config as a fallback, but prefer environment variables.
+        # if file_path and os.path.exists(file_path):
+        #     try:
+        #         with open(file_path, "r") as file:
+        #             for line in file:
+        #                 if "=" in line:
+        #                     key, value = line.strip().split("=", 1)
+        #                     config.setdefault(key, value)
+        #     except Exception as exc:
+        #         print(f"Failed to read config file {file_path}: {exc}")
+        # else:
+        #     print(f"Config file {file_path} not found. Using environment variables/defaults.")
+
         return config
 
     def start_button_clicked():
@@ -389,11 +399,11 @@ def create_widgets():
         qr_code_value = qr_code.get()
         print("QR Code:", qr_code_value)
         config = load_config()
-        BASE_URL = config["BASE_URL"]
-        Aepl_URL = config["Aepl_URL"]
+        # BASE_URL = config["BASE_URL"]
+        # Aepl_URL = config["Aepl_URL"]
 
-        SUCCESS_COLOR = "green"
-        FAIL_COLOR = "red"
+        # SUCCESS_COLOR = "green"
+        # FAIL_COLOR = "red"
 
         # if not qr_code_value:
         #     messagebox.showerror("QR Code", "Please Scan QR code then Proceed")

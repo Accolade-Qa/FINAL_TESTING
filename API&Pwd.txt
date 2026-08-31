@@ -1,3 +1,0 @@
-BASE_URL=http://lct-a4g-qa.accoladeelectronics.com:6101/api/station/checkScrewingStation
-AIRTEL_PASSWORD=Aepl@123
-Aepl_URL=http://lct-a4g-qa.accoladeelectronics.com:6101/api/station/saveFinalStationData
