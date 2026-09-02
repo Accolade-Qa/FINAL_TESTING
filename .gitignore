@@ -2,3 +2,6 @@
 serial_log_*.txt
 __pycache__
 .env
+/build
+/dist
+*.spec
