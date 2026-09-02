@@ -1054,7 +1054,7 @@ def create_widgets():
 
     # Start/Stop Button
     start_button = ttk.Button(root, text="START", command=start_button_clicked, style='Start.TButton')
-    start_button.place(x=15, y=7 * 38 + 300, anchor='nw')
+    start_button.place(x=15, y=connect_button.winfo_screenheight() - 150, anchor='nw')
     start_button.configure(width=18)
     start_button.configure(padding=(5, 10))
     start_button.focus_set()
