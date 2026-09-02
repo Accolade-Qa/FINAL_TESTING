@@ -988,10 +988,10 @@ def create_widgets():
 
     # QR Code
     qr_label = tk.Label(root, text="Scan QR:", font=('Helvetica', 12, 'bold'))
-    qr_label.place(x=5, y=root.winfo_screenheight() - 520, anchor='sw')
+    qr_label.place(x=5, y=root.winfo_screenheight() - 510, anchor='sw')
 
     qr_code = tk.Entry(root, width=44, font=('Helvetica', 10), justify='left')
-    qr_code.place(x=85, y=root.winfo_screenheight() - 525, anchor='sw')
+    qr_code.place(x=85, y=root.winfo_screenheight() - 515, anchor='sw')
 
     # COM Port Selection
     initial_devices = get_connected_devices()
