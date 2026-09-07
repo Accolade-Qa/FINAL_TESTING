@@ -873,6 +873,7 @@ def extract_data_from_program12(ser, stop_event):
             # Get FIX QUA value
             fix_quality = gps_data.get("FIX_QUA")
 
+            ### Main check to validate GPS
             if fix_quality is None:
                 print("No FIX QUA field found, retrying...")
                 retry_count += 1
@@ -891,6 +892,15 @@ def extract_data_from_program12(ser, stop_event):
                 # Return empty DataFrame with no data
                 df12 = pd.DataFrame()  # Empty DataFrame
                 return df12, fix_quality
+
+            # baypass the gps fix quality check for now
+            # if fix_quality == "0":
+            #     print(
+            #         f"FIX QUA = {fix_quality} → GPS Fix Not Valid (Retry {retry_count + 1}/{max_retries})"
+            #     )
+            #     df12 = pd.DataFrame()  # Empty DataFrame
+            #     return df12, fix_quality
+            
             else:
                 print(f"FIX QUA = {fix_quality} → Unknown value, retrying...")
                 retry_count += 1
