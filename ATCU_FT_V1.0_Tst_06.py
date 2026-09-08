@@ -36,7 +36,6 @@ import pandas as pd
 import os
 import time
 import openpyxl
-from dotenv import load_dotenv
 
 from test_04 import (
     combine_and_save_dataframes,
@@ -61,7 +60,6 @@ baudrate_var = None
 baudrate_dropdown = None
 airtel_authenticated = False  # Track Airtel authentication status
 extraction_thread = None  # Store the extraction thread
-load_dotenv()
 
 
 def resource_path(relative_path):
@@ -361,25 +359,29 @@ def create_widgets():
         print("UI data cleared - ready for next test")
 
     def load_config(file_path="API&Pwd.txt"):
-        # file_path="API&Pwd.txt"
+        if getattr(sys, "frozen", False):
+            config_directory = os.path.dirname(sys.executable)
+        else:
+            config_directory = os.path.dirname(os.path.abspath(__file__))
+
+        config_file_path = os.path.join(config_directory, file_path)
         config = {
-            "BASE_URL": os.getenv("BASE_URL", "http://default.url"),
-            "Aepl_URL": os.getenv("Aepl_URL", ""),
-            "AIRTEL_PASSWORD": os.getenv("AIRTEL_PASSWORD", "default"),
+            "BASE_URL": "http://default.url",
+            "Aepl_URL": "",
+            "AIRTEL_PASSWORD": "default",
         }
 
-        # # Keep the legacy file-based config as a fallback, but prefer environment variables.
-        # if file_path and os.path.exists(file_path):
-        #     try:
-        #         with open(file_path, "r") as file:
-        #             for line in file:
-        #                 if "=" in line:
-        #                     key, value = line.strip().split("=", 1)
-        #                     config.setdefault(key, value)
-        #     except Exception as exc:
-        #         print(f"Failed to read config file {file_path}: {exc}")
-        # else:
-        #     print(f"Config file {file_path} not found. Using environment variables/defaults.")
+        if os.path.exists(config_file_path):
+            try:
+                with open(config_file_path, "r", encoding="utf-8") as file:
+                    for line in file:
+                        if "=" in line:
+                            key, value = line.strip().split("=", 1)
+                            config[key.strip()] = value.strip()
+            except Exception as exc:
+                print(f"Failed to read config file {config_file_path}: {exc}")
+        else:
+            print(f"Config file {config_file_path} not found. Using default values.")
 
         return config
 
