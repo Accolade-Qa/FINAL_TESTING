@@ -1,4 +1,4 @@
-'''
+"""
 Copyright 2026-2027 Accolade Electronics Pvt. Ltd
 
 This program is free software; you can redistribute it and/or
@@ -16,7 +16,8 @@ brief       This is the source file for the Atcu testing integration
 date        25-3-2026
 author      Accolade Electronics <www.accoladeelectronics.com>
 Developed by   Anjanrav Dhole
-'''
+"""
+
 from datetime import datetime
 import tkinter as tk
 from tkinter import PhotoImage, StringVar, scrolledtext, simpledialog
@@ -35,9 +36,13 @@ import pandas as pd
 import os
 import time
 import openpyxl
-from dotenv import load_dotenv
 
-from test_04 import combine_and_save_dataframes, combine_and_save_dataframes1, combine_and_save_QR, combine_and_save_QR1
+from test_04 import (
+    combine_and_save_dataframes,
+    combine_and_save_dataframes1,
+    combine_and_save_QR,
+    combine_and_save_QR1,
+)
 
 stop_event = Event()
 process = None  # Global variable to hold the subprocess object
@@ -55,11 +60,11 @@ baudrate_var = None
 baudrate_dropdown = None
 airtel_authenticated = False  # Track Airtel authentication status
 extraction_thread = None  # Store the extraction thread
-load_dotenv()
+
 
 def resource_path(relative_path):
-    """ Get the absolute path to the resource in the executable or when running the script. """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    """Get the absolute path to the resource in the executable or when running the script."""
+    base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
 
@@ -90,18 +95,20 @@ class Stopwatch:
 
     def start(self):
         self.start_time = datetime.now()
+
         def update():
             if self.start_time:
                 elapsed = datetime.now() - self.start_time
-                self.elapsed_time = str(elapsed).split('.')[0]  # Format as HH:MM:SS
+                self.elapsed_time = str(elapsed).split(".")[0]  # Format as HH:MM:SS
                 self.stopwatch_var.set(self.elapsed_time)
                 output_text.after(self.update_interval, update)
+
         update()
 
     def stop(self):
         self.stop_time = datetime.now()
         if self.start_time:
-            self.elapsed_time = str(self.stop_time - self.start_time).split('.')[0]
+            self.elapsed_time = str(self.stop_time - self.start_time).split(".")[0]
             self.stopwatch_var.set(self.elapsed_time)
             self.start_time = None
 
@@ -124,7 +131,9 @@ def get_connected_devices():
     return devices
 
 
-def validate_inputs(com_port_var, baudrate_var, operator_name_entry, qa_name_entry, qr_code):
+def validate_inputs(
+    com_port_var, baudrate_var, operator_name_entry, qa_name_entry, qr_code
+):
     """Validate all input fields before starting"""
 
     if not com_port_var.get():
@@ -145,13 +154,15 @@ def validate_inputs(com_port_var, baudrate_var, operator_name_entry, qa_name_ent
         messagebox.showerror("Error", "Please fill all fields")
         return False
 
-    if baudrate != '115200':
+    if baudrate != "115200":
         messagebox.showerror("Error", "Please select the correct baudrate (115200)")
         return False
 
     if not operator_name.isalpha() or not qa_name.isalpha():
-        messagebox.showerror("Error",
-                             "Please input correct names (only alphabetic characters are allowed).")
+        messagebox.showerror(
+            "Error",
+            "Please input correct names (only alphabetic characters are allowed).",
+        )
         return False
     return True
 
@@ -174,11 +185,11 @@ def reset_ui_for_next_test():
 
     # Reset flags
     stopwatch_running = False
-    if 'stop_event' in globals() and stop_event:
+    if "stop_event" in globals() and stop_event:
         stop_event.clear()  # Clear the stop event for next use
 
     # Reset button
-    if 'start_button' in globals() and start_button:
+    if "start_button" in globals() and start_button:
         start_button.config(text="START")
 
     # Reset DO status circles to red
@@ -188,22 +199,23 @@ def reset_ui_for_next_test():
         print(f"Error calling reset_colors: {e}")
 
     # Reset stopwatch display to 00:00:00
-    if 'stopwatch' in globals() and stopwatch:
+    if "stopwatch" in globals() and stopwatch:
         stopwatch.stop()
-        if 'stopwatch_var' in globals() and stopwatch_var:
+        if "stopwatch_var" in globals() and stopwatch_var:
             stopwatch_var.set("00:00:00")
 
     # Ensure serial port is closed
     try:
         from test_04 import ser1
-        if 'ser1' in globals() and ser1 and ser1.is_open:
+
+        if "ser1" in globals() and ser1 and ser1.is_open:
             ser1.close()
             print("Serial port closed")
     except Exception as e:
         print(f"Error closing serial port: {e}")
 
     # Clear any remaining data
-    if 'output_queue' in globals() and output_queue:
+    if "output_queue" in globals() and output_queue:
         try:
             output_queue.put("\n--- Ready for next test ---\n")
             root.after(100, qr_code.focus_set)
@@ -257,9 +269,11 @@ def create_widgets():
 
     def update_dropdown():
         connected_devices = get_connected_devices()
-        com_port_dropdown['values'] = [f"{device[0]} - {device[1]}" for device in connected_devices]
+        com_port_dropdown["values"] = [
+            f"{device[0]} - {device[1]}" for device in connected_devices
+        ]
         if connected_devices:
-            com_port_dropdown.set('')  # Clear selection
+            com_port_dropdown.set("")  # Clear selection
 
     def on_operator_mode_change():
         """Handle operator mode switch - authentication required for Airtel"""
@@ -272,7 +286,7 @@ def create_widgets():
                 "Password Required",
                 "Enter Airtel activation password:",
                 show="*",
-                parent=root
+                parent=root,
             )
             if entered_password is None:
                 # Password dialog cancelled, switch back to BSNL
@@ -336,7 +350,8 @@ def create_widgets():
             start_button.config(text="START")
         try:
             from test_04 import ser1
-            if 'ser1' in globals() and ser1 and ser1.is_open:
+
+            if "ser1" in globals() and ser1 and ser1.is_open:
                 ser1.close()
                 print("Serial port closed")
         except:
@@ -344,25 +359,29 @@ def create_widgets():
         print("UI data cleared - ready for next test")
 
     def load_config(file_path="API&Pwd.txt"):
-        # file_path="API&Pwd.txt"
+        if getattr(sys, "frozen", False):
+            config_directory = os.path.dirname(sys.executable)
+        else:
+            config_directory = os.path.dirname(os.path.abspath(__file__))
+
+        config_file_path = os.path.join(config_directory, file_path)
         config = {
-            "BASE_URL": os.getenv("BASE_URL", "http://default.url"),
-            "Aepl_URL": os.getenv("Aepl_URL", ""),
-            "AIRTEL_PASSWORD": os.getenv("AIRTEL_PASSWORD", "default"),
+            "BASE_URL": "http://default.url",
+            "Aepl_URL": "",
+            "AIRTEL_PASSWORD": "default",
         }
 
-        # # Keep the legacy file-based config as a fallback, but prefer environment variables.
-        # if file_path and os.path.exists(file_path):
-        #     try:
-        #         with open(file_path, "r") as file:
-        #             for line in file:
-        #                 if "=" in line:
-        #                     key, value = line.strip().split("=", 1)
-        #                     config.setdefault(key, value)
-        #     except Exception as exc:
-        #         print(f"Failed to read config file {file_path}: {exc}")
-        # else:
-        #     print(f"Config file {file_path} not found. Using environment variables/defaults.")
+        if os.path.exists(config_file_path):
+            try:
+                with open(config_file_path, "r", encoding="utf-8") as file:
+                    for line in file:
+                        if "=" in line:
+                            key, value = line.strip().split("=", 1)
+                            config[key.strip()] = value.strip()
+            except Exception as exc:
+                print(f"Failed to read config file {config_file_path}: {exc}")
+        else:
+            print(f"Config file {config_file_path} not found. Using default values.")
 
         return config
 
@@ -375,7 +394,8 @@ def create_widgets():
                 stopwatch.stop()
             try:
                 from test_04 import ser1
-                if 'ser1' in globals() and ser1 and ser1.is_open:
+
+                if "ser1" in globals() and ser1 and ser1.is_open:
                     ser1.close()
                     print("Serial port closed due to stop")
             except:
@@ -389,7 +409,9 @@ def create_widgets():
             return
 
         stop_event.clear()
-        if not validate_inputs(com_port_var, baudrate_var, operator_name_entry, qa_name_entry, qr_code):
+        if not validate_inputs(
+            com_port_var, baudrate_var, operator_name_entry, qa_name_entry, qr_code
+        ):
             return
 
         clear_result_display()
@@ -401,99 +423,104 @@ def create_widgets():
         qr_code_value = qr_code.get()
         print("QR Code:", qr_code_value)
         config = load_config()
-        # BASE_URL = config["BASE_URL"]
-        # Aepl_URL = config["Aepl_URL"]
+        BASE_URL = config["BASE_URL"]
+        Aepl_URL = config["Aepl_URL"]
 
-        # SUCCESS_COLOR = "green"
-        # FAIL_COLOR = "red"
+        SUCCESS_COLOR = "green"
+        FAIL_COLOR = "red"
 
-        # if not qr_code_value:
-        #     messagebox.showerror("QR Code", "Please Scan QR code then Proceed")
-        #     return
+        if not qr_code_value:
+            messagebox.showerror("QR Code", "Please Scan QR code then Proceed")
+            return
 
-        # # Uncomment this section if you want API validation before starting
-        # try:
-        #     url = f"{BASE_URL}/{qr_code_value}"
-        #     response = requests.get(url, timeout=5)
-        #     data = response.json()
-        #     if not data.get("status"):
-        #         api_message = data.get("message", "Unknown error")
+        # Uncomment this section if you want API validation before starting
+        try:
+            url = f"{BASE_URL}/{qr_code_value}"
+            response = requests.get(url, timeout=5)
+            data = response.json()
+            if not data.get("status"):
+                api_message = data.get("message", "Unknown error")
 
-        #         success, serial_number = combine_and_save_QR(
-        #             operator_name=operator_name,
-        #             qa_name=qa_name,
-        #             qr_code_value=qr_code_value,
-        #             api_response_data=data,
-        #             result_status="FAIL",
-        #             failure_reason=api_message
-        #         )
-        #         if success:
-        #             result_var.set("FAIL")
-        #             reason_var.set(api_message)
-        #             result_display_label.configure(foreground="red")
-        #             qr_code.config(bg=FAIL_COLOR, fg="white")
-        #             root.after(5000, lambda: [
-        #                 qr_code.config(bg="white", fg="black"),
-        #                 qr_code.delete(0, tk.END)
-        #             ])
-        #             messagebox.showerror("Status", f"{api_message}")
+                success, serial_number = combine_and_save_QR(
+                    operator_name=operator_name,
+                    qa_name=qa_name,
+                    qr_code_value=qr_code_value,
+                    api_response_data=data,
+                    result_status="FAIL",
+                    failure_reason=api_message,
+                )
+                if success:
+                    result_var.set("FAIL")
+                    reason_var.set(api_message)
+                    result_display_label.configure(foreground="red")
+                    qr_code.config(bg=FAIL_COLOR, fg="white")
+                    root.after(
+                        5000,
+                        lambda: [
+                            qr_code.config(bg="white", fg="black"),
+                            qr_code.delete(0, tk.END),
+                        ],
+                    )
+                    messagebox.showerror("Status", f"{api_message}")
 
-        #             # Update fail count and total count
-        #             try:
-        #                 current_fail = int(fail_count_var.get().split(": ")[1])
-        #             except Exception:
-        #                 current_fail = 0
-        #             fail_count_var.set(f"Fail Count: {current_fail + 1}")
-        #             update_total_count()
-        #             start_button.config(text="START")
-        #             reset_colors()
-        #             stopwatch_var.set("00:00:00")
-        #             output_queue.put("\n--- STOPPED BY USER ---\n")
-        #             root.after(1000, lambda: check_thread_and_clear(extraction_thread))
-        #             # root.after(0, lambda: reset_ui_for_next_test())
+                    # Update fail count and total count
+                    try:
+                        current_fail = int(fail_count_var.get().split(": ")[1])
+                    except Exception:
+                        current_fail = 0
+                    fail_count_var.set(f"Fail Count: {current_fail + 1}")
+                    update_total_count()
+                    start_button.config(text="START")
+                    reset_colors()
+                    stopwatch_var.set("00:00:00")
+                    output_queue.put("\n--- STOPPED BY USER ---\n")
+                    root.after(1000, lambda: check_thread_and_clear(extraction_thread))
+                    # root.after(0, lambda: reset_ui_for_next_test())
 
-        #         else:
-        #             print("Failed to save screwing station result to Excel")
-        #         return
-        #     qr_code.config(bg=SUCCESS_COLOR, fg="white")
-        #     # root.after(0, lambda: reset_ui_for_next_test())
-        # except Exception as e:
-        #     error_message = f"Failed to connect to screwing station: {e}"
-        #     messagebox.showerror("Connection Error", error_message)
+                else:
+                    print("Failed to save screwing station result to Excel")
+                return
+            qr_code.config(bg=SUCCESS_COLOR, fg="white")
+            # root.after(0, lambda: reset_ui_for_next_test())
+        except Exception as e:
+            error_message = f"Failed to connect to screwing station: {e}"
+            messagebox.showerror("Connection Error", error_message)
 
-        #     success, serial_number = combine_and_save_QR(
-        #         operator_name=operator_name,
-        #         qa_name=qa_name,
-        #         qr_code_value=qr_code_value,
-        #         api_response_data={"error": str(e)},
-        #         result_status="ERROR",
-        #         failure_reason=error_message
-        #     )
-        #     if success:
-        #         result_var.set("ERROR")
-        #         reason_var.set(error_message)
-        #         result_display_label.configure(foreground="red")
-        #         current_fail_count = int(fail_count_var.get().split(": ")[1])
-        #         fail_count_var.set(f"Fail Count: {current_fail_count + 1}")
-        #         update_total_count()
-        #         start_button.config(text="START")
-        #         reset_colors()
-        #         stopwatch_var.set("00:00:00")
-        #         output_queue.put("\n--- STOPPED BY USER ---\n")
-        #         root.after(1000, lambda: check_thread_and_clear(extraction_thread))
-        #     return
+            success, serial_number = combine_and_save_QR(
+                operator_name=operator_name,
+                qa_name=qa_name,
+                qr_code_value=qr_code_value,
+                api_response_data={"error": str(e)},
+                result_status="ERROR",
+                failure_reason=error_message,
+            )
+            if success:
+                result_var.set("ERROR")
+                reason_var.set(error_message)
+                result_display_label.configure(foreground="red")
+                current_fail_count = int(fail_count_var.get().split(": ")[1])
+                fail_count_var.set(f"Fail Count: {current_fail_count + 1}")
+                update_total_count()
+                start_button.config(text="START")
+                reset_colors()
+                stopwatch_var.set("00:00:00")
+                output_queue.put("\n--- STOPPED BY USER ---\n")
+                root.after(1000, lambda: check_thread_and_clear(extraction_thread))
+            return
 
-        # if not selected_device or not operator_name or not qa_name or not qr_code_value:
-        #     messagebox.showerror("Error", "Please fill all fields")
-        #     return
+        if not selected_device or not operator_name or not qa_name or not qr_code_value:
+            messagebox.showerror("Error", "Please fill all fields")
+            return
 
-        if baudrate != '115200':
+        if baudrate != "115200":
             messagebox.showerror("Error", "Please select the correct baudrate (115200)")
             return
 
         if not operator_name.isalpha() or not qa_name.isalpha():
-            messagebox.showerror("Error",
-                                 "Please input correct names (only alphabetic characters are allowed).")
+            messagebox.showerror(
+                "Error",
+                "Please input correct names (only alphabetic characters are allowed).",
+            )
             return
 
         # Password check for Airtel mode
@@ -504,7 +531,7 @@ def create_widgets():
                     "Password Required",
                     "Enter Airtel activation password:",
                     show="*",
-                    parent=root
+                    parent=root,
                 )
 
                 if entered_password is None:
@@ -551,7 +578,9 @@ def create_widgets():
                             current_progress += 0.2
                             if current_progress > max_animated_progress:
                                 current_progress = max_animated_progress
-                            root.after(0, lambda p=current_progress: progress_var.set(p))
+                            root.after(
+                                0, lambda p=current_progress: progress_var.set(p)
+                            )
                         time.sleep(0.1)
 
                     # Set to 100% only if completed successfully
@@ -567,23 +596,46 @@ def create_widgets():
                 serial_number = 0
                 condition_met_DO1 = "False"
                 condition_met_DO2 = "False"
-                imei = ''
-                iccid = ''
+                imei = ""
+                iccid = ""
 
                 try:
                     if testing_stage == 1:
                         print("BSNL mode activated", testing_stage)
-                        result, serial_number, condition_met_DO1, condition_met_DO2, imei, iccid = combine_and_save_dataframes(
-                            selected_device, stop_event, operator_name, qa_name, qr_code_value
+                        (
+                            result,
+                            serial_number,
+                            condition_met_DO1,
+                            condition_met_DO2,
+                            imei,
+                            iccid,
+                        ) = combine_and_save_dataframes(
+                            selected_device,
+                            stop_event,
+                            operator_name,
+                            qa_name,
+                            qr_code_value,
                         )
                     else:
                         print("Airtel mode activated", testing_stage)
-                        result, serial_number, condition_met_DO1, condition_met_DO2, imei, iccid = combine_and_save_dataframes1(
-                            selected_device, stop_event, operator_name, qa_name, qr_code_value
+                        (
+                            result,
+                            serial_number,
+                            condition_met_DO1,
+                            condition_met_DO2,
+                            imei,
+                            iccid,
+                        ) = combine_and_save_dataframes1(
+                            selected_device,
+                            stop_event,
+                            operator_name,
+                            qa_name,
+                            qr_code_value,
                         )
                 except Exception as func_error:
                     print(f"Error calling extraction function: {func_error}")
                     import traceback
+
                     traceback.print_exc()
                     if not stop_event.is_set():
                         result = "ERROR"
@@ -592,20 +644,35 @@ def create_widgets():
                 # Small delay to let progress animation reach 90%
                 time.sleep(0.2)
                 # Schedule QR code reset after 2 seconds
-                root.after(2000, lambda: [
-                    qr_code.config(bg="white", fg="black") if qr_code else None,
-                    qr_code.delete(0, tk.END) if qr_code else None
-                ])
+                root.after(
+                    2000,
+                    lambda: [
+                        qr_code.config(bg="white", fg="black") if qr_code else None,
+                        qr_code.delete(0, tk.END) if qr_code else None,
+                    ],
+                )
 
                 # Handle different result types
                 if result == "STOPPED" or stop_event.is_set():
-                    root.after(0, lambda: progress_label_var.set("Extraction stopped by user"))
+                    root.after(
+                        0, lambda: progress_label_var.set("Extraction stopped by user")
+                    )
                     root.after(0, lambda: reset_ui_for_next_test())
                 else:
                     # Success case (PASS or FAIL) - Show results and stop stopwatch
-                    root.after(0, lambda: call_aepl_api(operator_name, qa_name, qr_code_value, imei, iccid, result))
-                    root.after(100, lambda: update_DO_result(condition_met_DO1, condition_met_DO2))
-                    root.after(0, lambda: progress_label_var.set("Extraction completed"))
+                    root.after(
+                        0,
+                        lambda: call_aepl_api(
+                            operator_name, qa_name, qr_code_value, imei, iccid, result
+                        ),
+                    )
+                    root.after(
+                        100,
+                        lambda: update_DO_result(condition_met_DO1, condition_met_DO2),
+                    )
+                    root.after(
+                        0, lambda: progress_label_var.set("Extraction completed")
+                    )
                     # root.after(0, lambda: call_aepl_api(qr_code_value, imei, iccid, result))
 
                     # Ensure progress bar is 100%
@@ -613,20 +680,33 @@ def create_widgets():
 
                     # STOP THE STOPWATCH HERE
                     root.after(0, lambda: stopwatch.stop())
-                    root.after(0, lambda: setattr(sys.modules[__name__], 'stopwatch_running', False))
+                    root.after(
+                        0,
+                        lambda: setattr(
+                            sys.modules[__name__], "stopwatch_running", False
+                        ),
+                    )
 
                     print("Test completed - Press STOP to clear and start next test")
 
             except Exception as e:
                 if not stop_event.is_set():
-                    root.after(0, lambda: output_queue.put(f"An unexpected error occurred: {e}\n"))
+                    root.after(
+                        0,
+                        lambda: output_queue.put(
+                            f"An unexpected error occurred: {e}\n"
+                        ),
+                    )
 
                 root.after(0, lambda: progress_var.set(0))
                 root.after(0, lambda: progress_label_var.set("Extraction stopped"))
 
                 # Stop the stopwatch on exception
                 root.after(0, lambda: stopwatch.stop())
-                root.after(0, lambda: setattr(sys.modules[__name__], 'stopwatch_running', False))
+                root.after(
+                    0,
+                    lambda: setattr(sys.modules[__name__], "stopwatch_running", False),
+                )
                 root.after(0, lambda: reset_ui_for_next_test())
 
             finally:
@@ -634,7 +714,9 @@ def create_widgets():
                     root.after(0, lambda: start_button.config(text="START"))
 
         # Store the thread reference and start it
-        extraction_thread = threading.Thread(target=execute_combine_and_save, daemon=True)
+        extraction_thread = threading.Thread(
+            target=execute_combine_and_save, daemon=True
+        )
         extraction_thread.start()
 
     def check_thread_and_clear(thread):
@@ -649,10 +731,10 @@ def create_widgets():
             root.after(100, qr_code.focus_set)
 
     def update_date_time():
-        current_date = datetime.now().strftime('%d-%m-%Y')
+        current_date = datetime.now().strftime("%d-%m-%Y")
         date_var.set(current_date)
 
-        current_time = datetime.now().strftime('%H:%M:%S')
+        current_time = datetime.now().strftime("%H:%M:%S")
         time_var.set(current_time)
 
         root.after(1000, update_date_time)
@@ -672,9 +754,14 @@ def create_widgets():
 
         # Add server connection check before proceeding
         if not check_server_connection(api_url):
-            messagebox.showerror("Connection Error",
-                                 "Cannot reach the server. Please check your network connection and server availability.")
-            return False, {"error": "Server unreachable", "details": "Connection check failed"}
+            messagebox.showerror(
+                "Connection Error",
+                "Cannot reach the server. Please check your network connection and server availability.",
+            )
+            return False, {
+                "error": "Server unreachable",
+                "details": "Connection check failed",
+            }
 
         if result == "PASS":
             result_bool = True
@@ -683,15 +770,11 @@ def create_widgets():
                 "pcbCode": str(qr_code_value),
                 "imei": str(imei),
                 "iccid": str(iccid),
-                "status": bool(result_bool)
+                "status": bool(result_bool),
             }
 
             # Make POST request
-            response = requests.post(
-                api_url,
-                json=payload,
-                timeout=20
-            )
+            response = requests.post(api_url, json=payload, timeout=20)
 
             # Check if request was successful
             if response.status_code == 200:
@@ -702,7 +785,7 @@ def create_widgets():
                 print(f"Response: {response_data}")
                 print("--------------------------------------------")
 
-                if response_data.get('status') == True:
+                if response_data.get("status") == True:
                     final_result = "PASS"
                     # # Save to Excel with empty failure reason for PASS
                     # success = combine_and_save_QR1(failure_reason="")
@@ -711,12 +794,12 @@ def create_widgets():
                 else:
                     final_result = "FAIL"
                     # Check status in response
-                    if response_data.get('status') == False:
+                    if response_data.get("status") == False:
                         # Get error message from response
-                        error_message = response_data.get('message', 'No message')
+                        error_message = response_data.get("message", "No message")
 
                         # Get additional data if available
-                        data = response_data.get('data', {})
+                        data = response_data.get("data", {})
 
                         # Format complete error details
                         full_error = f"Status: False\n\nMessage: {error_message}\n"
@@ -732,7 +815,9 @@ def create_widgets():
                         # Save to Excel with failure reason for FAIL
                         success = combine_and_save_QR1(failure_reason=full_error)
                         if success:
-                            print(f"Excel updated with failure reason: {full_error[:100]}...")
+                            print(
+                                f"Excel updated with failure reason: {full_error[:100]}..."
+                            )
 
                 update_result_display(final_result)
                 return final_result, response_data
@@ -751,15 +836,11 @@ def create_widgets():
                 "pcbCode": str(qr_code_value),
                 "imei": str(imei),
                 "iccid": str(iccid),
-                "status": bool(result_bool)
+                "status": bool(result_bool),
             }
 
             # Make POST request
-            response = requests.post(
-                api_url,
-                json=payload,
-                timeout=20
-            )
+            response = requests.post(api_url, json=payload, timeout=20)
 
             # Check if request was successful
             if response.status_code == 200:
@@ -777,8 +858,6 @@ def create_widgets():
                 success = combine_and_save_QR1(failure_reason=error_msg)
                 update_result_display("FAIL")
                 # return "FAIL", {"error": error_msg}
-
-
 
     # def call_aepl_api(operator_name, qa_name, qr_code_value, imei, iccid, result):
     #     print("sending this imei & iccid to server", imei, iccid)
@@ -878,8 +957,6 @@ def create_widgets():
     #                              "Cannot reach the server. Please check your network connection and server availability.")
     #         return False, {"error": "Server unreachable", "details": "Connection check failed"}
 
-
-
     # Add this helper function outside or inside your class
     def check_server_connection(url, timeout=10):
         """Check if server is reachable before making the actual request"""
@@ -977,7 +1054,8 @@ def create_widgets():
         # Close serial port
         try:
             from test_04 import ser1
-            if 'ser1' in globals() and ser1 and ser1.is_open:
+
+            if "ser1" in globals() and ser1 and ser1.is_open:
                 ser1.close()
         except:
             pass
@@ -985,44 +1063,55 @@ def create_widgets():
         root.destroy()
 
     # Create additional Tkinter variables that need root window
-    date_var = tk.StringVar(root, value=datetime.now().strftime('%d-%m-%Y'))
-    time_var = tk.StringVar(root, value=datetime.now().strftime('%H:%M:%S'))
+    date_var = tk.StringVar(root, value=datetime.now().strftime("%d-%m-%Y"))
+    time_var = tk.StringVar(root, value=datetime.now().strftime("%H:%M:%S"))
     result_var = tk.StringVar(value="")
     reason_var = tk.StringVar()
     progress_var = tk.DoubleVar()
     progress_label_var = tk.StringVar()
 
     # GUI Layout
-    blue_white = '#ecf0f1'
+    blue_white = "#ecf0f1"
     left_space = int(1 * 38)
     top_space = int(1 * 38)
 
     # QR Code
-    qr_label = tk.Label(root, text="Scan QR:", font=('Helvetica', 12, 'bold'))
-    qr_label.place(x=5, y=root.winfo_screenheight() - 510, anchor='sw')
+    qr_label = tk.Label(root, text="Scan QR:", font=("Helvetica", 12, "bold"))
+    qr_label.place(x=5, y=root.winfo_screenheight() - 510, anchor="sw")
 
-    qr_code = tk.Entry(root, width=44, font=('Helvetica', 10), justify='left')
-    qr_code.place(x=85, y=root.winfo_screenheight() - 515, anchor='sw')
+    qr_code = tk.Entry(root, width=44, font=("Helvetica", 10), justify="left")
+    qr_code.place(x=85, y=root.winfo_screenheight() - 515, anchor="sw")
 
     # COM Port Selection
     initial_devices = get_connected_devices()
-    com_port_label = tk.Label(root, text="Select COM Port and Baudrate:", font=('Helvetica', 13, 'bold'))
-    com_port_label.place(x=20, y=root.winfo_screenheight() - 440, anchor='sw')
+    com_port_label = tk.Label(
+        root, text="Select COM Port and Baudrate:", font=("Helvetica", 13, "bold")
+    )
+    com_port_label.place(x=20, y=root.winfo_screenheight() - 440, anchor="sw")
 
-    com_port_dropdown = ttk.Combobox(root, textvariable=com_port_var,
-                                     values=[f"{device[0]} - {device[1]}" for device in initial_devices],
-                                     state='readonly', width=50)
-    com_port_dropdown.place(x=20, y=root.winfo_screenheight() - 390, anchor='sw')
+    com_port_dropdown = ttk.Combobox(
+        root,
+        textvariable=com_port_var,
+        values=[f"{device[0]} - {device[1]}" for device in initial_devices],
+        state="readonly",
+        width=50,
+    )
+    com_port_dropdown.place(x=20, y=root.winfo_screenheight() - 390, anchor="sw")
 
-    baudrate_options = ['115200', '9600', '19200', '38400', '57600']
-    baudrate_dropdown = ttk.Combobox(root, textvariable=baudrate_var, values=baudrate_options, state='readonly',
-                                     width=30)
-    baudrate_dropdown.place(x=20, y=root.winfo_screenheight() - 340, anchor='sw')
+    baudrate_options = ["115200", "9600", "19200", "38400", "57600"]
+    baudrate_dropdown = ttk.Combobox(
+        root,
+        textvariable=baudrate_var,
+        values=baudrate_options,
+        state="readonly",
+        width=30,
+    )
+    baudrate_dropdown.place(x=20, y=root.winfo_screenheight() - 340, anchor="sw")
     baudrate_var.set(baudrate_options[0])  # Set default baudrate
 
     # Update Button
     update_button = tk.Button(root, text="Update List", command=update_dropdown)
-    update_button.place(x=95, y=root.winfo_screenheight() - 250, anchor='sw')
+    update_button.place(x=95, y=root.winfo_screenheight() - 250, anchor="sw")
 
     # Mode Selection
     radio_value = tk.IntVar()
@@ -1033,8 +1122,8 @@ def create_widgets():
         text="BSNL Mode",
         variable=radio_value,
         value=1,
-        font=('Arial', 10),
-        command=on_operator_mode_change
+        font=("Arial", 10),
+        command=on_operator_mode_change,
     )
     bsnl_radio.place(x=100, y=220)
 
@@ -1043,33 +1132,37 @@ def create_widgets():
         text="Airtel Mode",
         variable=radio_value,
         value=2,
-        font=('Arial', 10),
-        command=on_operator_mode_change
+        font=("Arial", 10),
+        command=on_operator_mode_change,
     )
     airtel_radio.place(x=240, y=220)
 
     # Connect Button
     connect_button = tk.Button(root, text="CONNECT", command=connect_button_clicked)
-    connect_button.place(x=95, y=root.winfo_screenheight() - 200, anchor='sw')
+    connect_button.place(x=95, y=root.winfo_screenheight() - 200, anchor="sw")
 
     # Start/Stop Button
-    start_button = ttk.Button(root, text="START", command=start_button_clicked, style='Start.TButton')
-    start_button.place(x=15, y=connect_button.winfo_screenheight() - 150, anchor='nw')
+    start_button = ttk.Button(
+        root, text="START", command=start_button_clicked, style="Start.TButton"
+    )
+    start_button.place(x=15, y=connect_button.winfo_screenheight() - 150, anchor="nw")
     start_button.configure(width=18)
     start_button.configure(padding=(5, 10))
     start_button.focus_set()
     # Use <Return> for Enter key, not <space>
-    root.bind('<Return>', lambda event: start_button_clicked())
+    root.bind("<Return>", lambda event: start_button_clicked())
 
     # Style
     root.style = ttk.Style()
-    root.style.configure("Start.TButton", font=('Helvetica', 16, 'bold'))
+    root.style.configure("Start.TButton", font=("Helvetica", 16, "bold"))
 
     # Output Text Area
     serial_data_container = ttk.Frame(root, padding="10")
-    serial_data_container.place(x=860, y=top_space + 3.2 * 38 + 20, anchor='nw')
+    serial_data_container.place(x=860, y=top_space + 3.2 * 38 + 20, anchor="nw")
 
-    output_text = scrolledtext.ScrolledText(serial_data_container, wrap=tk.WORD, width=48, height=20)
+    output_text = scrolledtext.ScrolledText(
+        serial_data_container, wrap=tk.WORD, width=48, height=20
+    )
     output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
     # Redirect stdout
@@ -1077,80 +1170,138 @@ def create_widgets():
 
     # User Details Container
     user_details_container = ttk.LabelFrame(root, text="User Details")
-    user_details_container.place(x=left_space, y=top_space, anchor='nw')
+    user_details_container.place(x=left_space, y=top_space, anchor="nw")
 
-    user_details_label = tk.Label(user_details_container, text="User Details", font=('Helvetica', 12), anchor='w',
-                                  padx=5)
-    user_details_label.grid(row=0, column=0, sticky='w', pady=5)
+    user_details_label = tk.Label(
+        user_details_container,
+        text="User Details",
+        font=("Helvetica", 12),
+        anchor="w",
+        padx=5,
+    )
+    user_details_label.grid(row=0, column=0, sticky="w", pady=5)
 
-    operator_name_label = tk.Label(user_details_container, text="Operator Name", font=('Helvetica', 10), anchor='w',
-                                   padx=5)
-    operator_name_label.grid(row=1, column=0, sticky='w', pady=2)
+    operator_name_label = tk.Label(
+        user_details_container,
+        text="Operator Name",
+        font=("Helvetica", 10),
+        anchor="w",
+        padx=5,
+    )
+    operator_name_label.grid(row=1, column=0, sticky="w", pady=2)
 
-    operator_name_entry = tk.Entry(user_details_container, width=12, font=('Helvetica', 10), justify='center')
+    operator_name_entry = tk.Entry(
+        user_details_container, width=12, font=("Helvetica", 10), justify="center"
+    )
     operator_name_entry.grid(row=1, column=1, pady=2, padx=2)
 
-    qa_name_label = tk.Label(user_details_container, text="QA Name", font=('Helvetica', 10), anchor='w', padx=5)
-    qa_name_label.grid(row=2, column=0, sticky='w', pady=2)
+    qa_name_label = tk.Label(
+        user_details_container,
+        text="QA Name",
+        font=("Helvetica", 10),
+        anchor="w",
+        padx=5,
+    )
+    qa_name_label.grid(row=2, column=0, sticky="w", pady=2)
 
-    qa_name_entry = tk.Entry(user_details_container, width=12, font=('Helvetica', 10), justify='center')
+    qa_name_entry = tk.Entry(
+        user_details_container, width=12, font=("Helvetica", 10), justify="center"
+    )
     qa_name_entry.grid(row=2, column=1, pady=2, padx=2)
 
     # Project Details Container
     project_details_container = ttk.LabelFrame(root, text="FINAL TESTING")
-    project_details_container.place(x=9 * 38 + 2 * left_space, y=top_space, anchor='nw')
+    project_details_container.place(x=9 * 38 + 2 * left_space, y=top_space, anchor="nw")
 
-    final_testing_label = tk.Label(project_details_container, text="TCU - 4G", font=('Helvetica', 30, 'bold'),
-                                   anchor='n', pady=5)
+    final_testing_label = tk.Label(
+        project_details_container,
+        text="TCU - 4G",
+        font=("Helvetica", 30, "bold"),
+        anchor="n",
+        pady=5,
+    )
     final_testing_label.pack()
 
-    project_name_label = tk.Label(project_details_container, text="ADVANCED TELEMATICS CONTROL UNIT",
-                                  font=('Helvetica', 10), anchor='w', padx=5)
-    project_name_label.pack(anchor='w', pady=2)
+    project_name_label = tk.Label(
+        project_details_container,
+        text="ADVANCED TELEMATICS CONTROL UNIT",
+        font=("Helvetica", 10),
+        anchor="w",
+        padx=5,
+    )
+    project_name_label.pack(anchor="w", pady=2)
 
     # Date and Time Container
     date_time_container = ttk.LabelFrame(root, text="Date and Time")
-    date_time_container.place(x=2 * 8 * 42 + 3 * left_space, y=top_space, anchor='nw')
+    date_time_container.place(x=2 * 8 * 42 + 3 * left_space, y=top_space, anchor="nw")
 
-    date_label = tk.Label(date_time_container, text="DATE", font=('Helvetica', 10), anchor='w', padx=5)
-    date_label.grid(row=0, column=0, sticky='w', pady=2)
+    date_label = tk.Label(
+        date_time_container, text="DATE", font=("Helvetica", 10), anchor="w", padx=5
+    )
+    date_label.grid(row=0, column=0, sticky="w", pady=2)
 
-    date_entry = tk.Entry(date_time_container, textvariable=date_var, width=12, font=('Helvetica', 10),
-                          justify='center', state='readonly')
+    date_entry = tk.Entry(
+        date_time_container,
+        textvariable=date_var,
+        width=12,
+        font=("Helvetica", 10),
+        justify="center",
+        state="readonly",
+    )
     date_entry.grid(row=0, column=1, pady=2, padx=2)
 
-    time_label = tk.Label(date_time_container, text="TIME", font=('Helvetica', 10), anchor='w', padx=5)
-    time_label.grid(row=1, column=0, sticky='w', pady=2)
+    time_label = tk.Label(
+        date_time_container, text="TIME", font=("Helvetica", 10), anchor="w", padx=5
+    )
+    time_label.grid(row=1, column=0, sticky="w", pady=2)
 
-    time_entry = tk.Entry(date_time_container, textvariable=time_var, width=12, font=('Helvetica', 10),
-                          justify='center', state='readonly')
+    time_entry = tk.Entry(
+        date_time_container,
+        textvariable=time_var,
+        width=12,
+        font=("Helvetica", 10),
+        justify="center",
+        state="readonly",
+    )
     time_entry.grid(row=1, column=1, pady=2, padx=2)
 
     update_date_time()
 
-    stopwatch_label = tk.Label(date_time_container, text="Stopwatch", font=('Helvetica', 10), anchor='w', padx=5)
-    stopwatch_label.grid(row=2, column=0, sticky='w', pady=2)
+    stopwatch_label = tk.Label(
+        date_time_container,
+        text="Stopwatch",
+        font=("Helvetica", 10),
+        anchor="w",
+        padx=5,
+    )
+    stopwatch_label.grid(row=2, column=0, sticky="w", pady=2)
 
-    stopwatch_display = tk.Label(date_time_container, textvariable=stopwatch_var, font=('Helvetica', 10), anchor='w',
-                                 padx=5)
-    stopwatch_display.grid(row=2, column=1, sticky='w', pady=2)
+    stopwatch_display = tk.Label(
+        date_time_container,
+        textvariable=stopwatch_var,
+        font=("Helvetica", 10),
+        anchor="w",
+        padx=5,
+    )
+    stopwatch_display.grid(row=2, column=1, sticky="w", pady=2)
 
     stopwatch = Stopwatch(stopwatch_var)
 
     # Logo Container
     logo_container = ttk.LabelFrame(root, text="ACCOLADE ELECTRONICS PRIVATE LIMITED")
-    logo_container.place(x=2.6 * 9 * 36 + 4 * left_space, y=top_space, anchor='nw',
-                         width=260,height=130)
+    logo_container.place(
+        x=2.6 * 9 * 36 + 4 * left_space, y=top_space, anchor="nw", width=260, height=130
+    )
 
     logo_label = tk.Label(logo_container, bd=0)
-    logo_label.grid(row=0, column=0, sticky='e', pady=5)
+    logo_label.grid(row=0, column=0, sticky="e", pady=5)
     # logo_label.place(x=50, y=50)
 
     try:
         image = Image.open(image_file_path)
         # image = tk.PhotoImage(file=image_file_path)
         image = image.resize((220, 100))
-        image = ImageTk.PhotoImage(image) 
+        image = ImageTk.PhotoImage(image)
 
         logo_label.config(image=image)
         logo_label.image = image
@@ -1159,45 +1310,75 @@ def create_widgets():
         print(f"Error loading image: {e}. Path used: {image_file_path}")
 
     # Line Canvas
-    line_canvas = tk.Canvas(root, height=2, width=root.winfo_screenwidth(), bg=blue_white, highlightthickness=0)
-    line_canvas.create_line(0, 0, root.winfo_screenwidth(), 0, fill='black')
-    line_canvas.place(x=0, y=top_space + 3 * 38 + 20, anchor='nw')
+    line_canvas = tk.Canvas(
+        root,
+        height=2,
+        width=root.winfo_screenwidth(),
+        bg=blue_white,
+        highlightthickness=0,
+    )
+    line_canvas.create_line(0, 0, root.winfo_screenwidth(), 0, fill="black")
+    line_canvas.place(x=0, y=top_space + 3 * 38 + 20, anchor="nw")
 
     # Progress Frame
     progress_frame = ttk.LabelFrame(root, text="Progress", padding="10")
-    progress_frame.place(x=860, y=top_space + 13 * 38 + 30, anchor='nw', width=400, height=80)
+    progress_frame.place(
+        x=860, y=top_space + 13 * 38 + 30, anchor="nw", width=400, height=80
+    )
 
-    progress_bar = ttk.Progressbar(progress_frame, orient="horizontal", length=200, mode="determinate",
-                                   variable=progress_var)
+    progress_bar = ttk.Progressbar(
+        progress_frame,
+        orient="horizontal",
+        length=200,
+        mode="determinate",
+        variable=progress_var,
+    )
     progress_bar.grid(row=0, column=0, padx=10, pady=10)
 
-    progress_label = ttk.Label(progress_frame, textvariable=progress_label_var, font=('Helvetica', 10))
+    progress_label = ttk.Label(
+        progress_frame, textvariable=progress_label_var, font=("Helvetica", 10)
+    )
     progress_label.grid(row=0, column=1, padx=10, pady=10)
 
     # Total Count Container (updated)
     total_count_container = ttk.LabelFrame(root, text="Total Count")
-    total_count_container.place(x=400, y=top_space + 10 * 38 + 40, anchor='nw')
+    total_count_container.place(x=400, y=top_space + 10 * 38 + 40, anchor="nw")
 
-    total_count_label = tk.Label(total_count_container, textvariable=total_count_var, font=('Helvetica', 12))
-    total_count_label.grid(row=0, column=0, sticky='w', pady=5, padx=10)
+    total_count_label = tk.Label(
+        total_count_container, textvariable=total_count_var, font=("Helvetica", 12)
+    )
+    total_count_label.grid(row=0, column=0, sticky="w", pady=5, padx=10)
 
-    pass_count_label = tk.Label(total_count_container, textvariable=pass_count_var, font=('Helvetica', 12))
-    pass_count_label.grid(row=1, column=0, sticky='w', pady=5, padx=10)
+    pass_count_label = tk.Label(
+        total_count_container, textvariable=pass_count_var, font=("Helvetica", 12)
+    )
+    pass_count_label.grid(row=1, column=0, sticky="w", pady=5, padx=10)
 
-    fail_count_label = tk.Label(total_count_container, textvariable=fail_count_var, font=('Helvetica', 12))
-    fail_count_label.grid(row=2, column=0, sticky='w', pady=5, padx=10)
+    fail_count_label = tk.Label(
+        total_count_container, textvariable=fail_count_var, font=("Helvetica", 12)
+    )
+    fail_count_label.grid(row=2, column=0, sticky="w", pady=5, padx=10)
 
     # Result Container
     result_container = ttk.LabelFrame(root, text="Result", padding="10")
-    result_container.place(x=400, y=top_space + 3.2 * 38 + 40, anchor='nw', width=400, height=200)
+    result_container.place(
+        x=400, y=top_space + 3.2 * 38 + 40, anchor="nw", width=400, height=200
+    )
 
-    result_label = ttk.Label(result_container, text="Result:", font=('Helvetica', 12))
-    result_label.grid(row=0, column=0, sticky='w', pady=5, padx=10)
+    result_label = ttk.Label(result_container, text="Result:", font=("Helvetica", 12))
+    result_label.grid(row=0, column=0, sticky="w", pady=5, padx=10)
 
-    result_display_label = ttk.Label(result_container, textvariable=result_var, font=('Helvetica', 32, 'bold'))
-    result_display_label.grid(row=0, column=1, sticky='w', pady=5)
+    result_display_label = ttk.Label(
+        result_container, textvariable=result_var, font=("Helvetica", 32, "bold")
+    )
+    result_display_label.grid(row=0, column=1, sticky="w", pady=5)
 
-    reason_display_label = ttk.Label(result_container, textvariable=reason_var, font=('Helvetica', 12), wraplength=380)
+    reason_display_label = ttk.Label(
+        result_container,
+        textvariable=reason_var,
+        font=("Helvetica", 12),
+        wraplength=380,
+    )
     reason_display_label.grid(row=1, column=0, columnspan=2, pady=5, padx=10)
 
     # Digital Status Container

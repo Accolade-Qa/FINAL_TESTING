@@ -6,3 +6,4 @@ __pycache__
 /dist
 *.spec
 /*_2026
+*.txt
