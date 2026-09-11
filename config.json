@@ -1,10 +1,12 @@
 {
   "hardware_versions": {
     "wifi": "V1.0. ATCU_WIFI",
-    "non_wifi": "V1.0. ATCU"
+    "non_wifi": "V1.0. ATCU",
+    "data_logger": "V2.0 DATA_LOGGER"
   },
   "ecuid": {
     "wifi": "0018FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-    "non_wifi": "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+    "non_wifi": "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "data_logger": "0023FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
   }
 }

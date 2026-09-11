@@ -49,8 +49,10 @@ with open(config_path, "r", encoding="utf-8") as f:
 
 HW_VERSION_WIFI = config["hardware_versions"]["wifi"]
 HW_VERSION_NON_WIFI = config["hardware_versions"]["non_wifi"]
+HW_VERSION_DATA_LOGGER = config["hardware_versions"]["data_logger"]
 ECUID_WIFI = config["ecuid"]["wifi"]
 ECUID_NON_WIFI = config["ecuid"]["non_wifi"]
+ECUID_DATA_LOGGER = config["ecuid"]["data_logger"]
 
 # Make these global so they can be accessed by other functions
 global subfolder_path, current_date, current_day, current_month_year, log_file_path, exe_file_path
@@ -410,6 +412,7 @@ def extract_data_from_program3(ser):
         "tcu ecu id": [
             "0018FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
             "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+            "0023FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
         ],
         "emmc certificate": "#0,0,0",
         "tml telmtry intrvl": 60,  # Added this to default parameters
@@ -502,9 +505,6 @@ def extract_data_from_program3(ser):
 
                 hardware_version = df2["Hardware Details"].iloc[0].strip()
 
-                ecuid_wifi = "0018FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-                ecuid_non_wifi = "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-
                 default_parameter_status = "unavailable"
 
                 # Check the value of tml telmtry intrvl
@@ -538,6 +538,32 @@ def extract_data_from_program3(ser):
                             hardware_version == HW_VERSION_NON_WIFI
                             and processed_data.get("tcu ecu id", "") == ECUID_NON_WIFI
                         ):
+                            if all(
+                                str(processed_data[key]) == str(default_parameters[key])
+                                for key in processed_data
+                                if key
+                                not in [
+                                    "imei",
+                                    "iccid",
+                                    "software version",
+                                    "hardware version",
+                                    "Hardware Details",
+                                    "Software Details",
+                                    "tcu ecu id",
+                                    "tml telmtry intrvl",
+                                ]
+                            ):
+                                default_parameter_status = "available"
+
+                        elif(
+                            hardware_version == HW_VERSION_DATA_LOGGER
+                            and processed_data.get("tcu ecu id", "") == ECUID_DATA_LOGGER
+                        ):
+                            processed_data["tml mqtt srvr"] = "tmcvgcc.cvppp.digital.tatamotors : 8883"
+                            processed_data["can loging intrvl"] = "60"
+                            processed_data["software version"] = "502316301157_NR"
+                            processed_data["hardware version"] = "502380444901_0B"
+
                             if all(
                                 str(processed_data[key]) == str(default_parameters[key])
                                 for key in processed_data
