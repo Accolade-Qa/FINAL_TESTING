@@ -1,0 +1,18 @@
+python -m pip install -r requirements.txt
+
+
+pyinstaller --noconfirm --clean --onefile --windowed `
+  --name "ATCU_FT_V1.0_Tst_06" `
+  --add-data "config.json;." `
+  --add-data "accolade-logo.png;." `
+  --hidden-import "test_04" `
+  "ATCU_FT_V1.0_Tst_06.py"
+
+
+pyinstaller --noconfirm --clean --onefile --windowed `
+  --name "ATCU_FT_V1.0_Tst_06" `
+  --add-data "config.json;." `
+  --add-data "accolade-logo.png;." `
+  --add-data ".env;." `
+  --hidden-import "test_04" `
+  "ATCU_FT_V1.0_Tst_06.py"

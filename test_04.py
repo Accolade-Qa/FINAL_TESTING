@@ -396,31 +396,31 @@ def extract_data_from_program3(ser):
     print("Checking for default parameters..")
 
     default_parameters = {
-        "aepl srvr": "atcu-data.accoladeelectronics.com : 6100",
-        "ais pri srvr": "255.255.255.255   : 65535",
-        "ais emg srvr": "255.255.255.255   : 65535",
-        "tml http srvr": "cva4g.cvppp.digital.tatamotors : 8883",
-        "tml mqtt srvr": "cva4g.cvppp.digital.tatamotors : 8883",
-        "can loging intrvl": 30,
-        "tele loging intrvl": 5,
-        "gen can intrvl": 60,
-        "tdps": 0,
-        "num fuel tanks": 1,
-        "aft autdetect done": 0,
-        "aft enable": 0,
-        "use ssl cert": 1,
+        "aepl srvr": "atcu-data.accoladeelectronics.com : 6100",  # CIP2
+        "ais pri srvr": "255.255.255.255   : 65535", # CHTP
+        "ais emg srvr": "255.255.255.255   : 65535", # CIP1
+        "tml http srvr": "cva4g.cvppp.digital.tatamotors : 8883", # HTTP
+        "tml mqtt srvr": "cva4g.cvppp.digital.tatamotors : 8883", # CIP3
+        "can loging intrvl": 30, # CLPIN
+        "tele loging intrvl": 5, # TLPIN 
+        "gen can intrvl": 60, # CPIN
+        "tdps": 0, # TDPS
+        "num fuel tanks": 1, # NOFT
+        "aft autdetect done": 0, # AFTAD
+        "aft enable": 0, # AFT
+        "use ssl cert": 1, # SSLCFG
         "tcu ecu id": [
             "0018FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
             "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-            "0023FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-        ],
+            # "0023FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+        ], # ECUID
         "emmc certificate": "#0,0,0",
-        "tml telmtry intrvl": 60,  # Added this to default parameters
+        "tml telmtry intrvl": 60,  # Added this to default parameters # TNPIN
     }
     keywords_and_columns = {
+        "aepl srvr": "aepl.ip1.port(CIP2)",
         "ais pri srvr": "ais.ip:port(CHTP)",
         "ais emg srvr": "aepl.ip1.port(CIP1)",
-        "aepl srvr": "aepl.ip1.port(CIP2)",
         "tml http srvr": "tml.ip:port",
         "tml mqtt srvr": "tml.ip:port(CIP3)",
         "tml telmtry intrvl": "tml.pvtSec (Sending) (TNPIN)60",
@@ -482,7 +482,7 @@ def extract_data_from_program3(ser):
         while True:
             # Check for timeout
             if time.time() - timeout_start > timeout_duration:
-                retry_count + 1
+                retry_count += 1
             try:
                 line = ser.readline().decode("utf-8", errors="replace").strip()
                 save_to_log(log_file_path, line)
@@ -557,18 +557,21 @@ def extract_data_from_program3(ser):
 
                         elif(
                             hardware_version == HW_VERSION_DATA_LOGGER
-                            and processed_data.get("tcu ecu id", "") == ECUID_DATA_LOGGER
                         ):
                             processed_data["tml mqtt srvr"] = "tmcvgcc.cvppp.digital.tatamotors : 8883"
                             processed_data["can loging intrvl"] = "60"
                             processed_data["software version"] = "502316301157_NR"
                             processed_data["hardware version"] = "502380444901_0B"
 
+                            data_logger_defaults = default_parameters.copy()
+
+                            data_logger_defaults["tml mqtt srvr"] = "tmcvgcc.cvppp.digital.tatamotors : 8883"
+                            data_logger_defaults["can loging intrvl"] = 60
+
                             if all(
-                                str(processed_data[key]) == str(default_parameters[key])
+                                str(processed_data[key]) == str(data_logger_defaults[key])
                                 for key in processed_data
-                                if key
-                                not in [
+                                if key not in [
                                     "imei",
                                     "iccid",
                                     "software version",
