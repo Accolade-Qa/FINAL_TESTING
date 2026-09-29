@@ -400,8 +400,8 @@ def extract_data_from_program3(ser):
         "ais pri srvr": "255.255.255.255   : 65535", # CHTP
         "ais emg srvr": "255.255.255.255   : 65535", # CIP1
         "tml http srvr": "cva4g.cvppp.digital.tatamotors : 8883", # HTTP
-        "tml mqtt srvr": "cva4g.cvppp.digital.tatamotors : 8883", # CIP3
-        "can loging intrvl": 30, # CLPIN
+        "tml mqtt srvr": "tmcvgcc.cvppp.digital.tatamotors : 8883", # CIP3
+        "can loging intrvl": 60, # CLPIN
         "tele loging intrvl": 5, # TLPIN 
         "gen can intrvl": 60, # CPIN
         "tdps": 0, # TDPS
@@ -409,11 +409,7 @@ def extract_data_from_program3(ser):
         "aft autdetect done": 0, # AFTAD
         "aft enable": 0, # AFT
         "use ssl cert": 1, # SSLCFG
-        "tcu ecu id": [
-            "0018FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-            "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-            # "0023FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-        ], # ECUID
+        "tcu ecu id": "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
         "emmc certificate": "#0,0,0",
         "tml telmtry intrvl": 60,  # Added this to default parameters # TNPIN
     }
@@ -426,7 +422,7 @@ def extract_data_from_program3(ser):
         "tml telmtry intrvl": "tml.pvtSec (Sending) (TNPIN)60",
         "tele loging intrvl": "tml.pvtSec (loging)(TLPIN)5",
         "gen can intrvl": "tml.canSec(sending)(CPIN)",
-        "can loging intrvl": "tml.canSec(loging) (CLPIN)30",
+        "can loging intrvl": "tml.canSec(loging) (CLPIN)60",
         "tdps": "TDPS (value=0)",
         "num fuel tanks": "No of fuel tank (NOFT)(value=1)",
         "aft autdetect done": "AFT autodetection flag(AFTAD)(value=0)",
@@ -514,62 +510,52 @@ def extract_data_from_program3(ser):
 
                 try:
                     if tml_telmtry_intrvl == "60":
-                        if (
-                            hardware_version == HW_VERSION_WIFI
-                            and processed_data.get("tcu ecu id", "") == ECUID_WIFI
-                        ):
-                            if all(
-                                str(processed_data[key]) == str(default_parameters[key])
-                                for key in processed_data
-                                if key
-                                not in [
-                                    "imei",
-                                    "iccid",
-                                    "software version",
-                                    "hardware version",
-                                    "Hardware Details",
-                                    "Software Details",
-                                    "tcu ecu id",
-                                    "tml telmtry intrvl",
-                                ]
-                            ):
-                                default_parameter_status = "available"
-                        elif (
-                            hardware_version == HW_VERSION_NON_WIFI
-                            and processed_data.get("tcu ecu id", "") == ECUID_NON_WIFI
-                        ):
-                            if all(
-                                str(processed_data[key]) == str(default_parameters[key])
-                                for key in processed_data
-                                if key
-                                not in [
-                                    "imei",
-                                    "iccid",
-                                    "software version",
-                                    "hardware version",
-                                    "Hardware Details",
-                                    "Software Details",
-                                    "tcu ecu id",
-                                    "tml telmtry intrvl",
-                                ]
-                            ):
-                                default_parameter_status = "available"
+                        # if (
+                        #     hardware_version == HW_VERSION_WIFI
+                        #     and processed_data.get("tcu ecu id", "") == ECUID_WIFI
+                        # ):
+                        #     if all(
+                        #         str(processed_data[key]) == str(default_parameters[key])
+                        #         for key in processed_data
+                        #         if key
+                        #         not in [
+                        #             "imei",
+                        #             "iccid",
+                        #             "software version",
+                        #             "hardware version",
+                        #             "Hardware Details",
+                        #             "Software Details",
+                        #             "tcu ecu id",
+                        #             "tml telmtry intrvl",
+                        #         ]
+                        #     ):
+                        #         default_parameter_status = "available"
+                        # elif (
+                        #     hardware_version == HW_VERSION_NON_WIFI
+                        #     and processed_data.get("tcu ecu id", "") == ECUID_NON_WIFI
+                        # ):
+                        #     if all(
+                        #         str(processed_data[key]) == str(default_parameters[key])
+                        #         for key in processed_data
+                        #         if key
+                        #         not in [
+                        #             "imei",
+                        #             "iccid",
+                        #             "software version",
+                        #             "hardware version",
+                        #             "Hardware Details",
+                        #             "Software Details",
+                        #             "tcu ecu id",
+                        #             "tml telmtry intrvl",
+                        #         ]
+                        #     ):
+                        #         default_parameter_status = "available"
 
-                        elif(
+                        if(
                             hardware_version == HW_VERSION_DATA_LOGGER
                         ):
-                            processed_data["tml mqtt srvr"] = "tmcvgcc.cvppp.digital.tatamotors : 8883"
-                            processed_data["can loging intrvl"] = "60"
-                            processed_data["software version"] = "502316301157_NR"
-                            processed_data["hardware version"] = "502380444901_0B"
-
-                            data_logger_defaults = default_parameters.copy()
-
-                            data_logger_defaults["tml mqtt srvr"] = "tmcvgcc.cvppp.digital.tatamotors : 8883"
-                            data_logger_defaults["can loging intrvl"] = 60
-
                             if all(
-                                str(processed_data[key]) == str(data_logger_defaults[key])
+                                str(processed_data[key]) == str(default_parameters[key])
                                 for key in processed_data
                                 if key not in [
                                     "imei",
