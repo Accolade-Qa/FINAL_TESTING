@@ -3,7 +3,6 @@ python -m pip install -r requirements.txt
 
 pyinstaller --noconfirm --clean --onefile --windowed `
   --name "ATCU_FT_V1.0_Tst_06" `
-  --add-data "config.json;." `
   --add-data "accolade-logo.png;." `
   --hidden-import "test_04" `
   "ATCU_FT_V1.0_Tst_06.py"
@@ -11,8 +10,11 @@ pyinstaller --noconfirm --clean --onefile --windowed `
 
 pyinstaller --noconfirm --clean --onefile --windowed `
   --name "ATCU_FT_V1.0_Tst_06" `
-  --add-data "config.json;." `
   --add-data "accolade-logo.png;." `
-  --add-data ".env;." `
   --hidden-import "test_04" `
   "ATCU_FT_V1.0_Tst_06.py"
+
+Place config.json and API&Pwd.txt in the same directory as the generated exe.
+The application reads these files at runtime; changes take effect when the exe
+is started again. commands.txt contains build instructions and is not read by
+the application.
