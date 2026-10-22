@@ -1,0 +1,10 @@
+{
+  "hardware_versions": {
+    "wifi": "V1.0. ATCU_WIFI",
+    "non_wifi": "V1.0. ATCU"
+  },
+  "ecuid": {
+    "wifi": "0018FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "non_wifi": "0017FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+  }
+}

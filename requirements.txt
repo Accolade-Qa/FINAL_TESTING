@@ -1,0 +1,8 @@
+openpyxl
+pandas
+numpy
+pyserial
+python-dotenv
+requests
+pyinstaller
+dotenv 
