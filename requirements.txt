@@ -4,5 +4,6 @@ numpy
 pyserial
 python-dotenv
 requests
+Pillow
 pyinstaller
-dotenv 
+dotenv
